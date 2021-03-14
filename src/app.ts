@@ -9,23 +9,13 @@ import { ZavodLadder } from './zavod/zavodLadder';
 import { ZavodPlayerApi } from './models/zavodTypes';
 import { ZavodPlayer } from './models/zavodSchemas';
 
-const options: cors.CorsOptions = {
-    allowedHeaders: [
-      'Origin',
-      'X-Requested-With',
-      'Content-Type',
-      'Accept',
-      'X-Access-Token',
-    ],
-    credentials: true,
-    methods: 'GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE',
-    origin: 'http://localhost:3000',
-    preflightContinue: false,
-  };
+console.log('init');
 
 const envConfig: DotenvConfig = new DotenvConfig();
 
 const db: string = envConfig.MONGO_DB_PATH;
+
+console.log(`connect mongo: ${String(db).substr(0, 15)}...`);
 
 mongoose.connect(db, {useNewUrlParser: true, useUnifiedTopology: true}).then(startApp);
 
@@ -40,6 +30,9 @@ async function startApp() {
 
 const app = express();
 const lolMan = new LolManager();
+
+console.log('start express');
+
 
 app.use(cors());
 
@@ -75,6 +68,8 @@ app.get('/users/:id', (req, res) => {
     res.send(`asking for id: ${req.params.id}, ${req.body}`); 
 });
 
-app.listen(3000, () => {
-    console.log('The application is listening on port 3000!');
+console.log('start listen...');
+
+app.listen(envConfig.APP_PORT, () => {
+    console.log(`The application is listening on port ${envConfig.APP_PORT}!`);
 })
