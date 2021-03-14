@@ -1,0 +1,80 @@
+import express from 'express';
+import { DotenvConfig } from './config';
+import { DocumentType, getModelForClass, mongoose, prop } from '@typegoose/typegoose';
+import { LolManager } from './lol/lolManager';
+import cors from 'cors';
+import * as rm from 'typed-rest-client/RestClient';
+import { ISheetDocument } from './models/sheetTypes';
+import { ZavodLadder } from './zavod/zavodLadder';
+import { ZavodPlayerApi } from './models/zavodTypes';
+import { ZavodPlayer } from './models/zavodSchemas';
+
+const options: cors.CorsOptions = {
+    allowedHeaders: [
+      'Origin',
+      'X-Requested-With',
+      'Content-Type',
+      'Accept',
+      'X-Access-Token',
+    ],
+    credentials: true,
+    methods: 'GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE',
+    origin: 'http://localhost:3000',
+    preflightContinue: false,
+  };
+
+const envConfig: DotenvConfig = new DotenvConfig();
+
+const db: string = envConfig.MONGO_DB_PATH;
+
+mongoose.connect(db, {useNewUrlParser: true, useUnifiedTopology: true}).then(startApp);
+
+let ladder: ZavodLadder = new ZavodLadder();
+
+async function startApp() {
+    let rest: rm.RestClient = new rm.RestClient(null, envConfig.SHEET_PATH);
+    let response: rm.IRestResponse<ISheetDocument> = await rest.get<ISheetDocument>(envConfig.SHEET_PATH);
+    
+    ladder.parseDoc(response.result as ISheetDocument);
+}
+
+const app = express();
+const lolMan = new LolManager();
+
+app.use(cors());
+
+app.get('/', (req, res) => {
+    res.send('Well done!');
+});
+
+app.get('/users', async (req, res) => {
+    const players = await lolMan.getAllPlayers();
+
+    let newPlayers = players.map(player => {
+        const p: ZavodPlayer = (player as DocumentType<ZavodPlayer>).toObject();
+        
+        const result: ZavodPlayerApi = {
+            ...(p),
+            ladderPositionName: ladder.getLadderPositionName(p.ladderPosition)
+        }
+        return result;
+    });    
+
+    res.json(newPlayers);
+});
+
+app.get('/games', async (req, res) => {
+    const games = await lolMan.getGames();
+
+    res.json(games);
+})
+
+app.get('/users/:id', (req, res) => {
+    // console.log(req);
+    
+    res.send(`asking for id: ${req.params.id}, ${req.body}`); 
+});
+
+app.listen(3000, () => {
+    console.log('The application is listening on port 3000!');
+})
