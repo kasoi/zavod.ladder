@@ -20,6 +20,7 @@
     "typegoose": "^5.9.1"
   },
   "scripts": {
-    "start": "ts-node src/app.ts"
+    "start": "ts-node src/app.ts",
+    "dev": "nodemon src/app.ts"
   }
 }

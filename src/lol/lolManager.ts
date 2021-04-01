@@ -90,9 +90,6 @@ export class LolManager extends EventEmitter{
 
         players = await ZavodPlayerModel.find().exec();
 
-        console.log('players:', players);
-        
-
         return players;
     }
 

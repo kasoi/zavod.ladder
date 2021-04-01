@@ -38,7 +38,8 @@ export class ZavodLadder {
 
     public getLadderPositionName(position: number): string {
         
-        let step = this.ladderPositions.find(item => item.minPoints >= position && item.maxPoints <= position);
+        let step = this.ladderPositions.find(item => position >= item.minPoints && position <= item.maxPoints);
+        
         if (step) return step.title;
 
         return '';
